@@ -1,15 +1,13 @@
 package webmapper;
 
-public class WebInputMapper extends AbstractionMapper {
+public class WebInputMapper {
     public WebInputMapper() {
         super();
     }
-    @Override
-    String abstract_input(XMLRequest request) {
+    String abstract_input(HTTPMessage request) {
         return request.getUrl() + " " + request.getMethod();
     }
-    @Override
-    String abstract_output(XMLRequest request) {
+    String abstract_output(HTTPMessage request) {
         return request.getStatus();
     }
 }

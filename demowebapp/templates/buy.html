@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    <div>
+        Your money: {{ money }}
+    </div>
+
+    <!-- dropdown menu for items to buy -->
+    <select name="items" id="items">
+        <option value="item1">Item 1</option>
+        <option value="item2">Item 2</option>
+        <option value="item3">Item 3</option>
+    </select>
+
+    <!-- quantity input -->
+    <input type="number" name="quantity" id="quantity">
+    
+    
+    <button type="submit" onclick="sendPostRequest()">Buy</button>
+    <script>
+        function sendPostRequest() {
+            fetch('/buy', {
+                method: 'POST',
+                body: JSON.stringify({ item: document.getElementById('items').value, quantity: document.getElementById('quantity').value })
+            });
+        }
+    </script>
+
+</body>
+</html>

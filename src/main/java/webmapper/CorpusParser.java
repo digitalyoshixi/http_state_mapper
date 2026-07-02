@@ -13,8 +13,8 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
 public class CorpusParser {
-    public ArrayList<XMLRequest> parse_corpus(String filename) {
-        final ArrayList<XMLRequest> requests = new ArrayList<>();
+    public ArrayList<HTTPMessage> parse_corpus(String filename) {
+        final ArrayList<HTTPMessage> requests = new ArrayList<>();
         try {
             final DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
             final DocumentBuilder builder = factory.newDocumentBuilder();
@@ -23,19 +23,38 @@ public class CorpusParser {
 
             for (int i = 0; i < items.getLength(); i++) {
                 final Element item = (Element) items.item(i);
+
+                // REQUEST
                 final String url = getChildText(item, "url");
                 final String method = getChildText(item, "method");
-                final String time = getChildText(item, "time");
-                final String status = getChildText(item, "status");
+                
+                final String timeStr = getChildText(item, "time");
+                long time;
+                try {
+                    java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy", java.util.Locale.ENGLISH);
+                    time = sdf.parse(timeStr).getTime();
+                } catch (Exception e) {
+                    time = 0L;
+                }
+           
+                
                 final String requestRaw = decodeElement(item, "request");
-                final String responseRaw = decodeElement(item, "response");
+                
                 final String body = extractBody(requestRaw);
+               
                 final String headers = extractHeaders(requestRaw);
                 final String cookies = extractHeader(requestRaw, "Cookie");
+
+                // RESPONSE
+                final String status = getChildText(item, "status");
+                final String mimetype = getChildText(item, "mimetype");
+                
+                final String responseRaw = decodeElement(item, "response");
+                
                 final String server = extractHeader(responseRaw, "Server");
                 final String date = extractHeader(responseRaw, "Date");
 
-                requests.add(new XMLRequest(url,
+                requests.add(new HTTPMessage(url,
                                             method,
                                             body,
                                             headers,

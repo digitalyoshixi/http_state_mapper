@@ -1,18 +1,18 @@
 package webmapper;
 
-public class XMLRequest {
-    private String url;
-    private String method;
-    private String body;
-    private String headers;
-    private String cookies;
-    private String response;
-    private String status;
-    private String time;
-    private String date;
-    private String server;
+public class HTTPMessage {
+    public String url;
+    public String method;
+    public String body;
+    public String headers;
+    public String cookies;
+    public String response;
+    public String status;
+    public long time;
+    public String date;
+    public String server;
 
-    public XMLRequest(String url, String method, String body, String headers, String cookies, String response, String status, String time, String date, String server) {
+    public HTTPMessage(String url, String method, String body, String headers, String cookies, String response, String status, long time, String date, String server) {
         this.url = url;
         this.method = method;
         this.body = body;
@@ -53,7 +53,7 @@ public class XMLRequest {
         return status;
     }
 
-    public String getTime() {
+    public long getTime() {
         return time;
     }
 

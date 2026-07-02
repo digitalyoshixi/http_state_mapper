@@ -1,8 +1,5 @@
-/home/yoshixi/Documents/httpmapper/src/main/java/webmapper/AbstractionMapper.java
-/home/yoshixi/Documents/httpmapper/src/main/java/webmapper/App.java
 /home/yoshixi/Documents/httpmapper/src/main/java/webmapper/CorpusParser.java
-/home/yoshixi/Documents/httpmapper/src/main/java/webmapper/Example1.java
-/home/yoshixi/Documents/httpmapper/src/main/java/webmapper/PassiveExample.java
+/home/yoshixi/Documents/httpmapper/src/main/java/webmapper/HTTPMessage.java
+/home/yoshixi/Documents/httpmapper/src/main/java/webmapper/WebInputClassifier.java
 /home/yoshixi/Documents/httpmapper/src/main/java/webmapper/WebInputMapper.java
 /home/yoshixi/Documents/httpmapper/src/main/java/webmapper/WebMapper.java
-/home/yoshixi/Documents/httpmapper/src/main/java/webmapper/XMLRequest.java
