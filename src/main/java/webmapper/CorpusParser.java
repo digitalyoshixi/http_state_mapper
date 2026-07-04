@@ -26,6 +26,7 @@ public class CorpusParser {
 
                 // REQUEST
                 final String url = getChildText(item, "url");
+                final String origin = url.split("/")[2];
                 final String method = getChildText(item, "method");
                 
                 final String timeStr = getChildText(item, "time");
@@ -55,6 +56,7 @@ public class CorpusParser {
                 final String date = extractHeader(responseRaw, "Date");
 
                 requests.add(new HTTPMessage(url,
+                                            origin,
                                             method,
                                             body,
                                             headers,

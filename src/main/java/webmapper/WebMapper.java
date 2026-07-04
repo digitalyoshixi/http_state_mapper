@@ -62,44 +62,48 @@ public final class WebMapper {
 
         // Group requests into sessions by:
         // - same host (origin)
-        // - each message in session within 10 seconds of the previous
+        // - each message in session within 10 seconds of the first request
 
         while (!requests.isEmpty()) {
             System.err.println(requests.size());
-            ArrayList<HTTPMessage> messages = new ArrayList<>();
             HTTPMessage first = requests.get(0);
-            messages.add(first);
             requests.remove(0);
+            List<String> abstracted_messages = new ArrayList<>();
+            abstracted_messages.add(webInputMapper.abstract_input(first));
+            alphabetSymbols.add(webInputMapper.abstract_input(first));
 
-            String origin = first.getUrl().split("/")[2]; // crude origin extraction (host:port)
+            String origin = first.getOrigin();
             long lastEpoch = first.getTime();
+            int i = 0;
 
-            for (int i = 1; i < requests.size(); i++){
+            while (i < requests.size()) {
                 HTTPMessage candidate = requests.get(i);
                 String candidateOrigin = candidate.getUrl().split("/")[2];
                 long currentEpoch = candidate.getTime();
+                String abstract_candidate = webInputMapper.abstract_input(candidate);
+                System.out.println(abstract_candidate);
+                abstracted_messages.add(abstract_candidate);
 
                 boolean sameOrigin = origin.equals(candidateOrigin);
                 boolean withinWindow = Math.abs(currentEpoch - lastEpoch) <= 10000; // 10 sec window
 
-                if (sameOrigin && withinWindow) messages.add(candidate);
+                i++;
+                if (sameOrigin && withinWindow) {
+                    requests.remove(candidate);
+                    i--;
+                    alphabetSymbols.add(abstract_candidate);
+                    Word<String> abstracted_messages_word = Word.fromList(abstracted_messages);
+                    if (webInputClassifier.classify(candidate)) {
+                        positiveSamples.add(abstracted_messages_word);
+                    }
+                    else {
+                        negativeSamples.add(abstracted_messages_word);
+                        break;
+                    }
+                }
+                else if (withinWindow) continue;
                 else break;
             }
-            // determine positivity or negativity
-            boolean allPositive = messages.stream().allMatch(webInputClassifier::classify);
-            List<String> abstracted_messages = messages.stream().map(webInputMapper::abstract_input).collect(Collectors.toList());
-            Word<String> abstracted_messages_word = Word.fromList(abstracted_messages);
-
-            if (allPositive){
-                positiveSamples.add(abstracted_messages_word);
-            }
-            else {
-                negativeSamples.add(abstracted_messages_word);
-            }
-
-            // remove all from messages
-            alphabetSymbols.addAll(abstracted_messages);
-            requests.removeAll(messages);
         }
         // for (HTTPMessage request : requests) {
         //     String abstract_input = webInputMapper.abstract_input(request);
@@ -137,8 +141,8 @@ public final class WebMapper {
         //Visualization.visualize(firstModel, alphabet);
         
         System.out.println("Running simulation:...");
-        System.out.println("Positive samples: " + positiveSamples);
-        System.out.println("Negative samples: " + negativeSamples);
+        System.out.println("Positive samples: " + positiveSamples.size());
+        System.out.println("Negative samples: " + negativeSamples.size());
 
         final Set<Word<String>> positiveSet = new LinkedHashSet<>(positiveSamples);
         final Set<Word<String>> negativeSet = new LinkedHashSet<>(negativeSamples);

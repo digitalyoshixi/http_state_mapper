@@ -2,6 +2,7 @@ package webmapper;
 
 public class HTTPMessage {
     public String url;
+    public String origin;
     public String method;
     public String body;
     public String headers;
@@ -12,8 +13,9 @@ public class HTTPMessage {
     public String date;
     public String server;
 
-    public HTTPMessage(String url, String method, String body, String headers, String cookies, String response, String status, long time, String date, String server) {
+    public HTTPMessage(String url, String origin, String method, String body, String headers, String cookies, String response, String status, long time, String date, String server) {
         this.url = url;
+        this.origin = origin;
         this.method = method;
         this.body = body;
         this.headers = headers;
@@ -27,6 +29,10 @@ public class HTTPMessage {
 
     public String getUrl() {
         return url;
+    }
+    
+    public String getOrigin() {
+        return origin;
     }
 
     public String getMethod() {
