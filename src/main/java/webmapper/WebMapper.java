@@ -15,28 +15,25 @@
  */
 package webmapper;
 
-import java.util.Arrays;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import de.learnlib.algorithm.PassiveLearningAlgorithm.PassiveDFALearner;
-import de.learnlib.algorithm.rpni.BlueFringeRPNIDFA;
+import de.learnlib.algorithm.PassiveLearningAlgorithm.PassiveMealyLearner;
 import de.learnlib.algorithm.rpni.BlueFringeEDSMDFA;
-import de.learnlib.algorithm.rpni.BlueFringeMDLDFA;
+import de.learnlib.algorithm.rpni.BlueFringeRPNIMealy;
+import de.learnlib.query.DefaultQuery;
 import net.automatalib.alphabet.Alphabet;
 import net.automatalib.alphabet.impl.Alphabets;
 import net.automatalib.automaton.fsa.DFA;
+import net.automatalib.automaton.transducer.MealyMachine;
+import net.automatalib.graph.Graph;
+import net.automatalib.incremental.dfa.tree.IncrementalDFATreeBuilder;
 import net.automatalib.visualization.Visualization;
 import net.automatalib.word.Word;
-
-import webmapper.CorpusParser;
-import webmapper.WebInputMapper;
-import webmapper.HTTPMessage;
 
 public final class WebMapper {
 
@@ -57,8 +54,8 @@ public final class WebMapper {
         WebInputClassifier webInputClassifier = new WebInputClassifier();
 
         Set<String> alphabetSymbols = new LinkedHashSet<>();
-        Collection<Word<String>> positiveSamples = new ArrayList<>();
-        Collection<Word<String>> negativeSamples = new ArrayList<>();
+        List<Word<String>> positiveSamples = new ArrayList<>();
+        List<Word<String>> negativeSamples = new ArrayList<>();
 
         // Group requests into sessions by:
         // - same host (origin)
@@ -75,6 +72,7 @@ public final class WebMapper {
             String origin = first.getOrigin();
             long lastEpoch = first.getTime();
             int i = 0;
+            boolean redundant = false;
 
             while (i < requests.size()) {
                 HTTPMessage candidate = requests.get(i);
@@ -94,6 +92,12 @@ public final class WebMapper {
                     alphabetSymbols.add(abstract_candidate);
                     Word<String> abstracted_messages_word = Word.fromList(abstracted_messages);
                     if (webInputClassifier.classify(candidate)) {
+                        if (redundant == false){
+                            redundant = true;
+                        }
+                        else {
+                           positiveSamples.remove(positiveSamples.size()-1);
+                        }
                         positiveSamples.add(abstracted_messages_word);
                     }
                     else {
@@ -141,8 +145,16 @@ public final class WebMapper {
         //Visualization.visualize(firstModel, alphabet);
         
         System.out.println("Running simulation:...");
+        System.out.println("---------------------------------");
         System.out.println("Positive samples: " + positiveSamples.size());
+        for (Word<String> i : positiveSamples){
+            System.out.println(i);
+        }
+        System.out.println("---------------------------------");
         System.out.println("Negative samples: " + negativeSamples.size());
+        for (Word<String> i : negativeSamples){
+            System.out.println(i);
+        }
 
         final Set<Word<String>> positiveSet = new LinkedHashSet<>(positiveSamples);
         final Set<Word<String>> negativeSet = new LinkedHashSet<>(negativeSamples);
@@ -155,11 +167,30 @@ public final class WebMapper {
 
         // with negative samples (i.e. words that must not be accepted by the model) we get a more "realistic"
         // generalization of the given training set
-        final DFA<?, String> secondModel =
-                computeModel(alphabet, positiveSamples, negativeSamples);
+        final DFA<?, String> secondModel = computeModel(alphabet, positiveSamples, negativeSamples);
         Visualization.visualize(secondModel, alphabet);
+        Graph<String,String> graph = generate_Graph(alphabet, positiveSet, negativeSet);
+        Visualization.visualize(graph);
     }
 
+    private static <I> Graph<I,I> generate_Graph(Alphabet<I> alphabet,
+                                              Collection<Word<I>> positiveSamples,
+                                              Collection<Word<I>> negativeSamples) {
+        
+        IncrementalDFATreeBuilder<I> treeBuilder = new IncrementalDFATreeBuilder<>(alphabet);
+        for (Word i : positiveSamples) {
+            treeBuilder.insert(i, true);
+        }
+        for (Word i : negativeSamples) {
+            treeBuilder.insert(i, false);
+        }
+
+        // get a usable view
+        return (Graph<I, I>) treeBuilder.asGraph();
+        // or, if you want a DFA-shaped transition system:
+
+    }
+    
     /**
      * Creates the learner instance, computes and return the inferred model.
      *
@@ -181,7 +212,8 @@ public final class WebMapper {
         // instantiate learner
         // alternatively one can also use the EDSM variant (BlueFringeEDSMDFA from the learnlib-rpni-edsm artifact)
         // or the MDL variant (BlueFringeMDLDFA from the learnlib-rpni-mdl artifact)
-        final PassiveDFALearner<I> learner = new BlueFringeRPNIDFA<>(alphabet);
+        //final PassiveDFALearner<I> learner = new BlueFringeRPNIDFA<>(alphabet);
+        final PassiveDFALearner<I> learner = new BlueFringeEDSMDFA<>(alphabet);
 
         learner.addPositiveSamples(positiveSamples);
         learner.addNegativeSamples(negativeSamples);
