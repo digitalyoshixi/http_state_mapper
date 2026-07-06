@@ -93,7 +93,9 @@ public final class WebMapper {
                     Word<String> abstracted_messages_word = Word.fromList(abstracted_messages);
                     if (webInputClassifier.classify(candidate)) {
                         if (redundant == false){
-                            redundant = true;
+                            // Note: this debounce makes several intermediate states non-terminating, obviously, all states themselves should be terminating, 
+                            // but removing the debounce makes learning take longer, can these states be recovered by another mechamism?
+                            // redundant = true;
                         }
                         else {
                            positiveSamples.remove(positiveSamples.size()-1);
